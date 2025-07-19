@@ -2,14 +2,19 @@ import express from "express";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import userRoutes from "./routes/userRoutes.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
 const app = express();
 const MONGO_URL = process.env.MONGO_URL;
 
-app.use(bodyParser.json());
+// Middleware for parsing JSON and URL-encoded data must come BEFORE routes
+app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+
+// Routes
+app.use("/api/users", userRoutes);
 
 mongoose
   .connect(`${MONGO_URL}`)
