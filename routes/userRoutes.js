@@ -1,6 +1,9 @@
 import express from "express";
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
+import generateToken from "../utils/generateToken.js";
+import protect from "../middleware/authMiddleware.js"
+
 
 const router = express.Router();
 
@@ -68,12 +71,12 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   try {
-    const { receivedEmail, receivedPassword } = req.body;
-    const user = await User.findOne({ email: receivedEmail });
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
-    const isMatch = await bcrypt.compare(receivedPassword, user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -84,7 +87,7 @@ router.post("/login", async (req, res) => {
       email: user.email,
       points: user.points,
       streak: user.streak,
-      // We will add the token here in the next step
+      token: generateToken(user._id)
     });
   } catch (err) {
     console.error("Error during user login: ", err);
