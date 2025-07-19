@@ -1,1 +1,9 @@
+# Node dependencies
+node_modules/
+
+# Env variables
 .env
+
+# OS-specific stuff (optional but good practice)
+.DS_Store
+Thumbs.db
