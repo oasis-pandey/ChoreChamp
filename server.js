@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import userRoutes from "./routes/userRoutes.js";
+import groupRoutes from "./routes/groupRoutes.js"
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +16,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // Routes
 app.use("/api/users", userRoutes);
+app.use("/api/groups", groupRoutes);
 
 mongoose
   .connect(`${MONGO_URL}`)
