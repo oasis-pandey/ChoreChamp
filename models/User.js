@@ -48,11 +48,10 @@ const userSchema = new mongoose.Schema(
     // - Ref: 'Group' (This tells Mongoose that this ObjectId refers to a document in the 'groups' collection,
     //        which will be managed by the 'Group' model we'll create later).
     // - Optional: A user might not be in a group immediately after registration.
-    groupId: {
+    groupIds: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Group', // Refers to the 'Group' model
-      default: null, // A user might not be in a group initially
-    },
+    }],
     // Points field for gamification:
     // - Type: Number
     // - Default: 0 (users start with 0 points)
@@ -96,5 +95,4 @@ const userSchema = new mongoose.Schema(
 );
 
 const User = mongoose.model('User', userSchema)
-
 export default User;
