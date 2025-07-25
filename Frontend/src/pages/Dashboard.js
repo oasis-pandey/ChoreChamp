@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
-import { choreAPI } from '../api/api';
+import { choreAPI, groupAPI } from '../api/api';
 import { useAuth } from '../context/AuthContext';
 
 const Dashboard = () => {
@@ -11,6 +11,7 @@ const Dashboard = () => {
         allGroupChores: [],
         allCompletedChores: []
     });
+    const [groups, setGroups] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [notification, setNotification] = useState('');
@@ -18,6 +19,7 @@ const Dashboard = () => {
 
     useEffect(() => {
         fetchDashboard();
+        fetchGroups();
     }, []);
 
     const fetchDashboard = async () => {
@@ -29,6 +31,15 @@ const Dashboard = () => {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchGroups = async () => {
+        try {
+            const data = await groupAPI.getMyGroups();
+            setGroups(data.groups);
+        } catch (err) {
+            console.error('Failed to load groups:', err);
         }
     };
 
@@ -90,6 +101,51 @@ const Dashboard = () => {
         </div>
     );
 
+    const GroupCard = ({ group }) => (
+        <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+            <div className="flex justify-between items-start mb-2">
+                <h3 className="font-semibold text-lg text-gray-800">{group.name}</h3>
+                <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">
+                    {group.memberCount} member{group.memberCount !== 1 ? 's' : ''}
+                </span>
+            </div>
+            <div className="mb-3">
+                <p className="text-sm text-gray-600 mb-1">Invite Code:</p>
+                <div className="flex items-center">
+                    <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800">
+                        {group.inviteCode}
+                    </code>
+                    <button
+                        onClick={() => {
+                            navigator.clipboard.writeText(group.inviteCode);
+                            setNotification('Invite code copied to clipboard!');
+                            setTimeout(() => setNotification(''), 3000);
+                        }}
+                        className="ml-2 text-blue-500 hover:text-blue-700 text-sm"
+                        title="Copy invite code"
+                    >
+                        📋
+                    </button>
+                </div>
+            </div>
+            <div className="text-sm text-gray-600">
+                <p className="mb-1">Members:</p>
+                <div className="flex flex-wrap gap-1">
+                    {group.members.slice(0, 3).map((member, index) => (
+                        <span key={member._id} className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs">
+                            {member.username}
+                        </span>
+                    ))}
+                    {group.members.length > 3 && (
+                        <span className="text-gray-500 text-xs">
+                            +{group.members.length - 3} more
+                        </span>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50">
@@ -121,10 +177,14 @@ const Dashboard = () => {
                 {/* User Stats */}
                 <div className="bg-white rounded-lg shadow-md p-6 mb-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">Welcome back, {user?.username}!</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="text-center">
                             <div className="text-3xl font-bold text-blue-600">{user?.points || 0}</div>
                             <div className="text-gray-600">Total Points</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-3xl font-bold text-purple-600">{groups?.length || 0}</div>
+                            <div className="text-gray-600">Groups Joined</div>
                         </div>
                         <div className="text-center">
                             <div className="text-3xl font-bold text-green-600">{chores.completed?.length || 0}</div>
@@ -164,6 +224,38 @@ const Dashboard = () => {
 
                 {/* Chores Grid */}
                 <div className="space-y-8">
+                    {/* Your Groups */}
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-800 mb-4">
+                            👥 Your Groups ({groups?.length || 0})
+                        </h2>
+                        {groups?.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {groups.map((group) => (
+                                    <GroupCard key={group._id} group={group} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="bg-white rounded-lg shadow-md p-6 text-center text-gray-500">
+                                <p className="mb-4">You haven't joined any groups yet!</p>
+                                <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                                    <Link
+                                        to="/create-group"
+                                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors"
+                                    >
+                                        Create Group
+                                    </Link>
+                                    <Link
+                                        to="/join-group"
+                                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors"
+                                    >
+                                        Join Group
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     {/* Your Assigned Chores */}
                     <div>
                         <h2 className="text-xl font-bold text-gray-800 mb-4">
