@@ -64,4 +64,27 @@ router.post("/join", protect, async (req, res) => {
     }
 });
 
+// GET /api/groups/my-groups - Get user's groups
+router.get("/my-groups", protect, async (req, res) => {
+    try {
+        const userGroupIds = req.user.groupIds || [];
+        const groups = await Group.find({
+            _id: { $in: userGroupIds }
+        }).populate('members', 'username email');
+
+        res.status(200).json({
+            groups: groups.map(group => ({
+                _id: group._id,
+                name: group.name,
+                inviteCode: group.inviteCode,
+                memberCount: group.members.length,
+                members: group.members
+            }))
+        });
+    } catch (error) {
+        console.error("Error fetching user groups:", error);
+        res.status(500).json({ message: "Failed to load groups" });
+    }
+});
+
 export default router;
