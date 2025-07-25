@@ -22,6 +22,11 @@ export const groupAPI = {
         const response = await api.post('/groups/join', { inviteCode });
         return response.data;
     },
+
+    getMyGroups: async () => {
+        const response = await api.get('/groups/my-groups');
+        return response.data;
+    },
 };
 
 export const choreAPI = {
