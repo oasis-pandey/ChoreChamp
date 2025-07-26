@@ -13,11 +13,8 @@ const GroupDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [notification, setNotification] = useState('');
-    // eslint-disable-next-line no-unused-vars
     const [completionNote, setCompletionNote] = useState('');
-    // eslint-disable-next-line no-unused-vars
     const [showNoteModal, setShowNoteModal] = useState(false);
-    // eslint-disable-next-line no-unused-vars
     const [choreToComplete, setChoreToComplete] = useState(null);
 
     // Form states for creating chores
@@ -63,17 +60,26 @@ const GroupDetail = () => {
 
     const handleCompleteChore = async (choreId, note = '') => {
         try {
-            await choreAPI.complete(choreId, note);
+            console.log('Attempting to complete chore:', choreId, 'with note:', note);
+            console.log('Current user:', user);
+            const result = await choreAPI.complete(choreId, note);
+            console.log('Completion result:', result);
             setNotification('Chore completed! 🎉');
             setTimeout(() => setNotification(''), 3000);
             fetchGroupChores();
         } catch (err) {
-            setError('Failed to complete chore');
-            setTimeout(() => setError(''), 3000);
+            console.error('Full error completing chore:', err);
+            console.error('Error response:', err.response);
+            console.error('Error message:', err.message);
+            console.error('Error status:', err.response?.status);
+            console.error('Error data:', err.response?.data);
+
+            const errorMessage = err.response?.data?.message || err.message || 'Unknown error';
+            setError(`Failed to complete chore: ${errorMessage}`);
+            setTimeout(() => setError(''), 5000);
         }
     };
 
-    // eslint-disable-next-line no-unused-vars
     const openCompletionModal = (chore) => {
         setChoreToComplete(chore);
         setShowNoteModal(true);
@@ -85,7 +91,6 @@ const GroupDetail = () => {
         setCompletionNote('');
     };
 
-    // eslint-disable-next-line no-unused-vars
     const submitChoreCompletion = async () => {
         if (choreToComplete) {
             await handleCompleteChore(choreToComplete._id, completionNote);
@@ -102,6 +107,21 @@ const GroupDetail = () => {
         } catch (err) {
             setError('Failed to remove chore');
             setTimeout(() => setError(''), 3000);
+        }
+    };
+
+    const handleDeletePendingChore = async (choreId) => {
+        if (window.confirm('Are you sure you want to delete this chore? This action cannot be undone.')) {
+            try {
+                await choreAPI.deleteChore(choreId);
+                setNotification('Chore deleted successfully! 🗑️');
+                setTimeout(() => setNotification(''), 3000);
+                fetchGroupChores(); // Refresh the chores list
+            } catch (err) {
+                console.error('Delete error:', err);
+                setError(err.response?.data?.message || 'Failed to delete chore');
+                setTimeout(() => setError(''), 3000);
+            }
         }
     };
 
@@ -143,68 +163,85 @@ const GroupDetail = () => {
         }));
     };
 
-    const ChoreCard = ({ chore, isCompleted = false }) => (
-        <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-            <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold text-lg text-gray-800">{chore.name}</h3>
-                <div className="flex items-center gap-2">
-                    {chore.points && (
-                        <span className="text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded">
-                            {chore.points} pts
+    const ChoreCard = ({ chore, isCompleted = false }) => {
+        // Determine if current user can delete this chore
+        const canDelete = !isCompleted && (
+            chore.createdBy?._id === user?._id || // Creator can delete
+            chore.assignedTo?._id === user?._id    // Assigned person can delete
+        );
+
+        return (
+            <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+                <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-semibold text-lg text-gray-800">{chore.name}</h3>
+                    <div className="flex items-center gap-2">
+                        {chore.points && (
+                            <span className="text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded">
+                                {chore.points} pts
+                            </span>
+                        )}
+                        {isCompleted && (
+                            <button
+                                onClick={() => handleRemoveCompletedChore(chore._id)}
+                                className="text-red-500 hover:text-red-700 text-sm p-1 rounded hover:bg-red-50 transition-colors"
+                                title="Remove chore"
+                            >
+                                🗑️
+                            </button>
+                        )}
+                        {canDelete && (
+                            <button
+                                onClick={() => handleDeletePendingChore(chore._id)}
+                                className="text-red-500 hover:text-red-700 text-sm p-1 rounded hover:bg-red-50 transition-colors"
+                                title="Delete chore"
+                            >
+                                ❌
+                            </button>
+                        )}
+                    </div>
+                </div>
+                {chore.description && (
+                    <p className="text-gray-600 text-sm mb-3">{chore.description}</p>
+                )}
+                {chore.createdBy && (
+                    <p className="text-xs text-gray-500 mb-2">
+                        📝 Created by: <strong>{chore.createdBy.username}</strong>
+                    </p>
+                )}
+                {chore.completionNote && isCompleted && (
+                    <p className="text-sm text-gray-600 mb-2 bg-gray-50 p-2 rounded">
+                        💬 Note: <em>{chore.completionNote}</em>
+                    </p>
+                )}
+                <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs text-gray-500 capitalize">
+                        {chore.frequency} • {chore.status}
+                    </span>
+                    {chore.assignedTo && (
+                        <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+                            {chore.assignedTo.username}
                         </span>
                     )}
-                    {isCompleted && (
-                        <button
-                            onClick={() => handleRemoveCompletedChore(chore._id)}
-                            className="text-red-500 hover:text-red-700 text-sm p-1 rounded hover:bg-red-50 transition-colors"
-                            title="Remove chore"
-                        >
-                            🗑️
-                        </button>
-                    )}
                 </div>
-            </div>
-            {chore.description && (
-                <p className="text-gray-600 text-sm mb-3">{chore.description}</p>
-            )}
-            {chore.createdBy && (
-                <p className="text-xs text-gray-500 mb-2">
-                    📝 Created by: <strong>{chore.createdBy.username}</strong>
-                </p>
-            )}
-            {chore.completionNote && isCompleted && (
-                <p className="text-sm text-gray-600 mb-2 bg-gray-50 p-2 rounded">
-                    💬 Note: <em>{chore.completionNote}</em>
-                </p>
-            )}
-            <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-gray-500 capitalize">
-                    {chore.frequency} • {chore.status}
-                </span>
-                {chore.assignedTo && (
-                    <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
-                        {chore.assignedTo.username}
-                    </span>
+                {!isCompleted && (chore.assignedTo?._id === user?._id || !chore.assignedTo) && (
+                    <button
+                        onClick={() => openCompletionModal(chore)}
+                        className="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm transition-colors"
+                    >
+                        {chore.assignedTo ? 'Complete' : 'Take & Complete'}
+                    </button>
+                )}
+                {chore.lastCompleted && (
+                    <p className="text-xs text-gray-400 mt-2">
+                        Last completed: {new Date(chore.lastCompleted).toLocaleDateString()}
+                        {chore.assignedTo && isCompleted && (
+                            <span> by {chore.assignedTo.username}</span>
+                        )}
+                    </p>
                 )}
             </div>
-            {!isCompleted && (chore.assignedTo?._id === user?._id || !chore.assignedTo) && (
-                <button
-                    onClick={() => openCompletionModal(chore)}
-                    className="w-full bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm transition-colors"
-                >
-                    {chore.assignedTo ? 'Complete' : 'Take & Complete'}
-                </button>
-            )}
-            {chore.lastCompleted && (
-                <p className="text-xs text-gray-400 mt-2">
-                    Last completed: {new Date(chore.lastCompleted).toLocaleDateString()}
-                    {chore.assignedTo && isCompleted && (
-                        <span> by {chore.assignedTo.username}</span>
-                    )}
-                </p>
-            )}
-        </div>
-    );
+        );
+    };
 
     const MemberCard = ({ member }) => {
         const memberChores = chores.filter(chore => chore.assignedTo?._id === member._id);
