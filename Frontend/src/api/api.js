@@ -27,6 +27,16 @@ export const groupAPI = {
         const response = await api.get('/groups/my-groups');
         return response.data;
     },
+
+    leave: async (groupId) => {
+        const response = await api.post(`/groups/${groupId}/leave`);
+        return response.data;
+    },
+
+    getGroupById: async (groupId) => {
+        const response = await api.get(`/groups/${groupId}`);
+        return response.data;
+    },
 };
 
 export const choreAPI = {
@@ -35,13 +45,23 @@ export const choreAPI = {
         return response.data;
     },
 
-    complete: async (choreId) => {
-        const response = await api.post(`/chores/${choreId}/complete`);
+    complete: async (choreId, note = '') => {
+        const response = await api.post(`/chores/${choreId}/complete`, { note });
         return response.data;
     },
 
     getDashboard: async () => {
         const response = await api.get('/chores/dashboard');
+        return response.data;
+    },
+
+    getGroupChores: async (groupId) => {
+        const response = await api.get(`/chores/group/${groupId}`);
+        return response.data;
+    },
+
+    removeChore: async (choreId) => {
+        const response = await api.delete(`/chores/${choreId}/remove`);
         return response.data;
     },
 };

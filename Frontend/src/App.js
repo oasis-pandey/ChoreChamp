@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import CreateGroup from './pages/CreateGroup';
 import JoinGroup from './pages/JoinGroup';
 import CreateChore from './pages/CreateChore';
+import GroupDetail from './pages/GroupDetail';
 
 function App() {
     return (
@@ -38,6 +39,11 @@ function App() {
                         <Route path="/create-chore" element={
                             <ProtectedRoute>
                                 <CreateChore />
+                            </ProtectedRoute>
+                        } />
+                        <Route path="/group/:groupId" element={
+                            <ProtectedRoute>
+                                <GroupDetail />
                             </ProtectedRoute>
                         } />
 
