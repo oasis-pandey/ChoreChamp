@@ -64,4 +64,9 @@ export const choreAPI = {
         const response = await api.delete(`/chores/${choreId}/remove`);
         return response.data;
     },
+
+    deleteChore: async (choreId) => {
+        const response = await api.delete(`/chores/${choreId}/delete`);
+        return response.data;
+    },
 };
