@@ -90,16 +90,32 @@ router.post("/create", protect, async (req, res) => {
 // POST /api/chores/:choreId/complete - Mark a chore as complete
 router.post("/:choreId/complete", protect, async (req, res) => {
     try {
+        console.log("=== CHORE COMPLETION REQUEST ===");
+        console.log("User ID:", req.user?._id);
+        console.log("User:", req.user?.name, req.user?.email);
+        console.log("Chore ID:", req.params.choreId);
+        console.log("Note:", req.body.note);
+
         const { choreId } = req.params;
         const { note } = req.body;
 
         const chore = await Chore.findById(choreId);
         if (!chore) {
+            console.log("ERROR: Chore not found");
             return res.status(404).json({ message: "Chore not found" });
         }
 
+        console.log("Found chore:", {
+            id: chore._id,
+            title: chore.title,
+            assignedTo: chore.assignedTo,
+            groupId: chore.groupId,
+            status: chore.status
+        });
+
         // Check if user is assigned to this chore or is in the same group
         if (chore.assignedTo && chore.assignedTo.toString() !== req.user._id.toString()) {
+            console.log("ERROR: Not authorized - assignedTo:", chore.assignedTo.toString(), "userId:", req.user._id.toString());
             return res.status(403).json({ message: "Not authorized to complete this chore" });
         }
 
@@ -110,9 +126,12 @@ router.post("/:choreId/complete", protect, async (req, res) => {
         if (note) {
             chore.completionNote = note;
         }
+
+        console.log("Saving chore with status:", chore.status);
         await chore.save();
 
         // Create a chore log entry
+        console.log("Creating chore log...");
         await ChoreLog.create({
             choreId: chore._id,
             userId: req.user._id,
@@ -121,17 +140,21 @@ router.post("/:choreId/complete", protect, async (req, res) => {
         });
 
         // Award points to user (optional - you can adjust the point system)
+        console.log("Updating user points...");
         req.user.points = (req.user.points || 0) + 10;
         await req.user.save();
 
+        console.log("SUCCESS: Chore completed successfully!");
         res.status(200).json({
             message: "Chore completed successfully!",
             chore,
             pointsAwarded: 10,
         });
     } catch (error) {
-        console.error("Error completing chore:", error);
-        res.status(500).json({ message: "Failed to complete chore" });
+        console.error("=== CHORE COMPLETION ERROR ===");
+        console.error("Error details:", error);
+        console.error("Stack trace:", error.stack);
+        res.status(500).json({ message: "Failed to complete chore", error: error.message });
     }
 });
 
@@ -201,6 +224,51 @@ router.delete("/:choreId/remove", protect, async (req, res) => {
     } catch (error) {
         console.error("Error removing chore:", error);
         res.status(500).json({ message: "Failed to remove chore" });
+    }
+});
+
+// DELETE /api/chores/:choreId/delete - Delete a pending chore (before completion)
+router.delete("/:choreId/delete", protect, async (req, res) => {
+    try {
+        const { choreId } = req.params;
+        const userId = req.user._id;
+
+        // Find the chore
+        const chore = await Chore.findById(choreId);
+        if (!chore) {
+            return res.status(404).json({ message: "Chore not found" });
+        }
+
+        // Check if chore is pending (can't delete completed chores, use remove for that)
+        if (chore.status === "completed") {
+            return res.status(400).json({ message: "Cannot delete completed chores. Use remove instead." });
+        }
+
+        // Check if user has permission to delete this chore
+        // Allow: creator, assigned person, or group members
+        const userGroupIds = req.user.groupIds || [];
+        const isCreator = chore.createdBy && chore.createdBy.equals(userId);
+        const isAssigned = chore.assignedTo && chore.assignedTo.equals(userId);
+        const isInSameGroup = userGroupIds.some(groupId => groupId.equals(chore.groupId));
+
+        if (!isCreator && !isAssigned && !isInSameGroup) {
+            return res.status(403).json({ message: "Not authorized to delete this chore" });
+        }
+
+        // Delete the chore completely
+        await Chore.findByIdAndDelete(choreId);
+
+        // Also remove any associated chore logs (if any exist)
+        await ChoreLog.deleteMany({ choreId: choreId });
+
+        res.status(200).json({
+            message: "Chore deleted successfully",
+            choreId: choreId,
+            deletedBy: req.user.username || req.user.email
+        });
+    } catch (error) {
+        console.error("Error deleting chore:", error);
+        res.status(500).json({ message: "Failed to delete chore" });
     }
 });
 
