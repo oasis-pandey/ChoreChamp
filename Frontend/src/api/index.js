@@ -1,10 +1,5 @@
 import axios from 'axios';
-
-// In development with proxy, use relative URLs
-// In production, you'd set this to your deployed backend URL
-const API_BASE_URL = process.env.NODE_ENV === 'production'
-    ? 'https://your-backend-url.com/api'
-    : '/api';
+import { API_BASE_URL } from '../config/api.js';
 
 const api = axios.create({
     baseURL: API_BASE_URL,

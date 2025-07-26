@@ -13,14 +13,36 @@ const app = express();
 const MONGO_URL = process.env.MONGO_URL;
 
 // CORS middleware to allow frontend communication
-app.use(cors({
-    origin: ["http://localhost:3001", "http://localhost:3000"],
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production'
+        ? process.env.CORS_ORIGIN || 'https://your-frontend-domain.com'
+        : ["http://localhost:3001", "http://localhost:3000"],
     credentials: true
-}));
+};
+app.use(cors(corsOptions));
 
 // Middleware for parsing JSON and URL-encoded data must come BEFORE routes
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+
+// Health check endpoint
+app.get("/", (req, res) => {
+    res.json({
+        message: "ChoreChamp API is running successfully!",
+        version: "1.0.0",
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// API health check
+app.get("/api/health", (req, res) => {
+    res.json({
+        status: "healthy",
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+    });
+});
 
 // Routes
 app.use("/api/users", userRoutes);
@@ -38,7 +60,3 @@ mongoose
     .catch((err) => {
         console.error("There was a error connecting to the database", err);
     });
-
-app.get("/", (req, res) => {
-    res.send("API is running....");
-});
