@@ -104,6 +104,10 @@ const Login = () => {
                                 Sign up
                             </Link>
                         </span>
+                        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                            <div className="font-medium mb-1">🔒 Secure Password Requirements:</div>
+                            <div>New accounts require strong passwords with uppercase, lowercase, numbers, and special characters.</div>
+                        </div>
                     </div>
                 </form>
             </div>

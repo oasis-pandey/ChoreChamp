@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../api/api';
+import PasswordStrengthIndicator, { validatePassword } from '../components/PasswordStrengthIndicator';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -27,6 +28,14 @@ const Register = () => {
         setLoading(true);
         setError('');
 
+        // Validate password strength
+        const passwordValidation = validatePassword(formData.password);
+        if (!passwordValidation.isValid) {
+            setError('Password does not meet security requirements');
+            setLoading(false);
+            return;
+        }
+
         if (formData.password !== formData.confirmPassword) {
             setError('Passwords do not match');
             setLoading(false);
@@ -44,7 +53,12 @@ const Register = () => {
                 navigate('/login');
             }, 2000);
         } catch (err) {
-            setError(err.response?.data?.message || 'Registration failed');
+            // Handle detailed error messages from backend
+            if (err.response?.data?.errors) {
+                setError(`Registration failed: ${err.response.data.errors.join(', ')}`);
+            } else {
+                setError(err.response?.data?.message || 'Registration failed');
+            }
         } finally {
             setLoading(false);
         }
@@ -124,6 +138,7 @@ const Register = () => {
                                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                                 placeholder="Password"
                             />
+                            <PasswordStrengthIndicator password={formData.password} />
                         </div>
                         <div>
                             <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
@@ -145,11 +160,21 @@ const Register = () => {
                     <div>
                         <button
                             type="submit"
-                            disabled={loading}
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                            disabled={loading || !validatePassword(formData.password).isValid || formData.password !== formData.confirmPassword}
+                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? 'Creating account...' : 'Sign up'}
                         </button>
+                        {formData.password && !validatePassword(formData.password).isValid && (
+                            <p className="text-xs text-red-600 mt-1">
+                                Please meet all password requirements above
+                            </p>
+                        )}
+                        {formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                            <p className="text-xs text-red-600 mt-1">
+                                Passwords do not match
+                            </p>
+                        )}
                     </div>
 
                     <div className="text-center">
