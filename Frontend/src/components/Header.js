@@ -14,7 +14,12 @@ const Header = () => {
     return (
         <header className="bg-white text-black">
             <div className="container mx-auto px-6 py-6 flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-black">ChoreChamp</h1>
+                <h1 
+                    className="text-3xl font-bold text-black cursor-pointer hover:text-blue-600 transition-colors"
+                    onClick={() => navigate('/dashboard')}
+                >
+                    ChoreChamp
+                </h1>
                 {user && (
                     <div className="flex items-center space-x-6">
                         <span className="text-lg font-medium">Welcome, {user.username}!</span>
