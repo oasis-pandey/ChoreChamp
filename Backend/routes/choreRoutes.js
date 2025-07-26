@@ -15,25 +15,25 @@ router.get("/dashboard", protect, async (req, res) => {
         const assignedChores = await Chore.find({
             assignedTo: req.user._id,
             status: "pending"
-        }).populate('groupId', 'name');
+        }).populate('groupId', 'name').populate('createdBy', 'username');
 
         // Get all pending chores in user's groups (including unassigned ones)
         const allGroupChores = await Chore.find({
             groupId: { $in: userGroupIds },
             status: "pending"
-        }).populate('groupId', 'name').populate('assignedTo', 'username');
+        }).populate('groupId', 'name').populate('assignedTo', 'username').populate('createdBy', 'username');
 
         // Get recently completed chores by the user
         const completedChores = await Chore.find({
             assignedTo: req.user._id,
             status: "completed"
-        }).populate('groupId', 'name').limit(10).sort({ lastCompleted: -1 });
+        }).populate('groupId', 'name').populate('createdBy', 'username').limit(10).sort({ lastCompleted: -1 });
 
         // Get all completed chores in user's groups
         const allCompletedChores = await Chore.find({
             groupId: { $in: userGroupIds },
             status: "completed"
-        }).populate('groupId', 'name').populate('assignedTo', 'username').limit(20).sort({ lastCompleted: -1 });
+        }).populate('groupId', 'name').populate('assignedTo', 'username').populate('createdBy', 'username').limit(20).sort({ lastCompleted: -1 });
 
         res.status(200).json({
             assigned: assignedChores,
@@ -71,6 +71,7 @@ router.post("/create", protect, async (req, res) => {
             frequency,
             assignedTo: assignedTo || null,
             groupId: finalGroupId,
+            createdBy: req.user._id,
         });
 
         res.status(201).json({
@@ -90,6 +91,7 @@ router.post("/create", protect, async (req, res) => {
 router.post("/:choreId/complete", protect, async (req, res) => {
     try {
         const { choreId } = req.params;
+        const { note } = req.body;
 
         const chore = await Chore.findById(choreId);
         if (!chore) {
@@ -104,6 +106,10 @@ router.post("/:choreId/complete", protect, async (req, res) => {
         // Update chore status
         chore.status = "completed";
         chore.lastCompleted = new Date();
+        chore.assignedTo = req.user._id; // Assign to completing user if it was unassigned
+        if (note) {
+            chore.completionNote = note;
+        }
         await chore.save();
 
         // Create a chore log entry
@@ -111,6 +117,7 @@ router.post("/:choreId/complete", protect, async (req, res) => {
             choreId: chore._id,
             userId: req.user._id,
             completedAt: new Date(),
+            note: note || "",
         });
 
         // Award points to user (optional - you can adjust the point system)
@@ -132,15 +139,68 @@ router.post("/:choreId/complete", protect, async (req, res) => {
 router.get("/group/:groupId", protect, async (req, res) => {
     try {
         const { groupId } = req.params;
+        const userId = req.user._id;
 
-        const chores = await Chore.find({ groupId })
-            .populate('assignedTo', 'username')
-            .sort({ createdAt: -1 });
+        // Check if user is a member of this group
+        const userGroupIds = req.user.groupIds || [];
+        if (!userGroupIds.some(id => id.equals(groupId))) {
+            return res.status(403).json({ message: "You are not a member of this group" });
+        }
 
-        res.status(200).json({ chores });
+        // Get all chores for this group
+        const chores = await Chore.find({
+            groupId: groupId
+        }).populate('assignedTo', 'username').populate('createdBy', 'username').sort({ createdAt: -1 });
+
+        res.status(200).json({
+            chores: chores
+        });
     } catch (error) {
         console.error("Error fetching group chores:", error);
         res.status(500).json({ message: "Failed to load group chores" });
+    }
+});
+
+// DELETE /api/chores/:choreId/remove - Remove a completed chore from logs
+router.delete("/:choreId/remove", protect, async (req, res) => {
+    try {
+        const { choreId } = req.params;
+        const userId = req.user._id;
+
+        // Find the chore
+        const chore = await Chore.findById(choreId);
+        if (!chore) {
+            return res.status(404).json({ message: "Chore not found" });
+        }
+
+        // Check if chore is completed
+        if (chore.status !== "completed") {
+            return res.status(400).json({ message: "Can only remove completed chores" });
+        }
+
+        // Check if user has permission (either assigned to them or in same group)
+        const userGroupIds = req.user.groupIds || [];
+        const hasPermission =
+            (chore.assignedTo && chore.assignedTo.equals(userId)) ||
+            userGroupIds.some(groupId => groupId.equals(chore.groupId));
+
+        if (!hasPermission) {
+            return res.status(403).json({ message: "Not authorized to remove this chore" });
+        }
+
+        // Delete the chore completely
+        await Chore.findByIdAndDelete(choreId);
+
+        // Also remove associated chore logs
+        await ChoreLog.deleteMany({ choreId: choreId });
+
+        res.status(200).json({
+            message: "Chore removed successfully",
+            choreId: choreId
+        });
+    } catch (error) {
+        console.error("Error removing chore:", error);
+        res.status(500).json({ message: "Failed to remove chore" });
     }
 });
 
