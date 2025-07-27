@@ -1,19 +1,14 @@
 import React from 'react';
 
 /**
- * Password validation utility functions for frontend (relaxed requirements)
+ * Password validation utility functions for frontend (no restrictions)
  */
 export const validatePassword = (password) => {
     const errors = [];
 
-    // Check minimum length (reduced from 8 to 6)
-    if (password.length < 6) {
-        errors.push('Password must be at least 6 characters long');
-    }
-
-    // Check for at least one letter OR one number (much more relaxed)
-    if (!/[a-zA-Z]/.test(password) && !/\d/.test(password)) {
-        errors.push('Password must contain at least one letter or number');
+    // Only check if password exists
+    if (!password || password.length < 1) {
+        errors.push('Password is required');
     }
 
     return {
@@ -23,41 +18,24 @@ export const validatePassword = (password) => {
 };
 
 /**
- * Gets password strength score (0-3) - simplified scoring  
+ * Gets password strength score (always returns 'Good' now)
  */
 export const getPasswordStrength = (password) => {
-    let score = 0;
-    const feedback = [];
-
-    // Length check (reduced requirement)
-    if (password.length >= 6) {
-        score++;
-    } else if (password.length > 0) {
-        feedback.push('Use at least 6 characters');
+    // Always return good strength for any non-empty password
+    if (!password || password.length === 0) {
+        return {
+            score: 0,
+            strength: 'Enter a password',
+            color: 'text-gray-500',
+            feedback: ['Password is required']
+        };
     }
-
-    // Has letters
-    if (/[a-zA-Z]/.test(password)) {
-        score++;
-    } else if (password.length > 0) {
-        feedback.push('Add some letters');
-    }
-
-    // Has numbers  
-    if (/\d/.test(password)) {
-        score++;
-    } else if (password.length > 0) {
-        feedback.push('Add some numbers');
-    }
-
-    const strengthLevels = ['Weak', 'Fair', 'Good', 'Strong'];
-    const strengthColors = ['text-red-600', 'text-yellow-500', 'text-blue-500', 'text-green-600'];
 
     return {
-        score: Math.min(score, 3),
-        strength: strengthLevels[Math.min(score, 3)] || 'Weak',
-        color: strengthColors[Math.min(score, 3)] || 'text-red-600',
-        feedback: feedback
+        score: 1,
+        strength: 'Good',
+        color: 'text-green-600',
+        feedback: []
     };
 };
 
@@ -72,56 +50,23 @@ const PasswordStrengthIndicator = ({ password }) => {
 
     return (
         <div className="mt-2">
-            {/* Strength Meter */}
-            <div className="flex items-center mb-2">
-                <span className="text-sm text-gray-600 mr-2">Strength:</span>
-                <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
-                    <div
-                        className={`h-2 rounded-full transition-all duration-300 ${score <= 1 ? 'bg-red-500' :
-                            score <= 2 ? 'bg-yellow-500' :
-                                score <= 3 ? 'bg-blue-500' :
-                                    score <= 4 ? 'bg-green-500' :
-                                        'bg-green-600'
-                            }`}
-                        style={{ width: `${(score / 3) * 100}%` }}
-                    ></div>
+            {/* Simple strength display */}
+            <div className="flex items-center justify-between mb-2">
+                <div className="flex-1 mr-3">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                            className={`h-2 rounded-full transition-all duration-300 ${password.length > 0 ? 'bg-green-500' : 'bg-gray-300'}`}
+                            style={{ width: password.length > 0 ? '100%' : '0%' }}
+                        ></div>
+                    </div>
                 </div>
                 <span className={`text-sm font-medium ${color}`}>{strength}</span>
             </div>
 
-            {/* Requirements Checklist - Simplified */}
-            <div className="space-y-1">
-                <div className="flex items-center text-xs">
-                    <span className={`mr-2 ${password.length >= 6 ? 'text-green-500' : 'text-red-500'}`}>
-                        {password.length >= 6 ? '✓' : '✗'}
-                    </span>
-                    <span className={password.length >= 6 ? 'text-green-600' : 'text-gray-600'}>
-                        At least 6 characters
-                    </span>
-                </div>
-                <div className="flex items-center text-xs">
-                    <span className={`mr-2 ${/[a-zA-Z]/.test(password) ? 'text-green-500' : 'text-red-500'}`}>
-                        {/[a-zA-Z]/.test(password) ? '✓' : '✗'}
-                    </span>
-                    <span className={/[a-zA-Z]/.test(password) ? 'text-green-600' : 'text-gray-600'}>
-                        Contains letters
-                    </span>
-                </div>
-                <div className="flex items-center text-xs">
-                    <span className={`mr-2 ${/\d/.test(password) ? 'text-green-500' : 'text-red-500'}`}>
-                        {/\d/.test(password) ? '✓' : '✗'}
-                    </span>
-                    <span className={/\d/.test(password) ? 'text-green-600' : 'text-gray-600'}>
-                        Contains numbers (optional)
-                    </span>
-                </div>
-            </div>
-
-            {/* Validation errors */}
-            {!isValid && password.length > 0 && (
+            {/* Only show error if password is completely empty */}
+            {!isValid && (
                 <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs">
-                    <div className="text-red-700 font-medium">Password requirements:</div>
-                    <ul className="list-disc list-inside text-red-600 mt-1">
+                    <ul className="list-disc list-inside text-red-600">
                         {errors.map((error, index) => (
                             <li key={index}>{error}</li>
                         ))}
