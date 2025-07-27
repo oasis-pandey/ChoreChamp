@@ -1,36 +1,21 @@
 // Password validation utility functions
 
 /**
- * Validates if a password meets strong password requirements
+ * Validates if a password meets basic password requirements (less strict)
  * @param {string} password - The password to validate
  * @returns {object} - Validation result with isValid boolean and errors array
  */
 export const validatePassword = (password) => {
     const errors = [];
 
-    // Check minimum length
-    if (password.length < 8) {
-        errors.push('Password must be at least 8 characters long');
+    // Check minimum length (reduced from 8 to 6)
+    if (password.length < 6) {
+        errors.push('Password must be at least 6 characters long');
     }
 
-    // Check for uppercase letter
-    if (!/[A-Z]/.test(password)) {
-        errors.push('Password must contain at least one uppercase letter');
-    }
-
-    // Check for lowercase letter
-    if (!/[a-z]/.test(password)) {
-        errors.push('Password must contain at least one lowercase letter');
-    }
-
-    // Check for number
-    if (!/\d/.test(password)) {
-        errors.push('Password must contain at least one number');
-    }
-
-    // Check for special character (expanded list)
-    if (!/[@$!%*?&#\-_+={}[\]|\\:;"'<>,.\/~]/.test(password)) {
-        errors.push('Password must contain at least one special character');
+    // Check for at least one letter OR one number (much more relaxed)
+    if (!/[a-zA-Z]/.test(password) && !/\d/.test(password)) {
+        errors.push('Password must contain at least one letter or number');
     }
 
     return {
@@ -40,7 +25,7 @@ export const validatePassword = (password) => {
 };
 
 /**
- * Gets password strength score (0-5)
+ * Gets password strength score (0-3) - simplified scoring
  * @param {string} password - The password to score
  * @returns {object} - Score and feedback
  */
@@ -48,51 +33,32 @@ export const getPasswordStrength = (password) => {
     let score = 0;
     const feedback = [];
 
-    // Length check
-    if (password.length >= 8) {
+    // Length check (reduced requirement)
+    if (password.length >= 6) {
         score++;
-    } else {
-        feedback.push('Use at least 8 characters');
+    } else if (password.length > 0) {
+        feedback.push('Use at least 6 characters');
     }
 
-    // Uppercase check
-    if (/[A-Z]/.test(password)) {
+    // Has letters
+    if (/[a-zA-Z]/.test(password)) {
         score++;
-    } else {
-        feedback.push('Add uppercase letters');
+    } else if (password.length > 0) {
+        feedback.push('Add some letters');
     }
 
-    // Lowercase check
-    if (/[a-z]/.test(password)) {
-        score++;
-    } else {
-        feedback.push('Add lowercase letters');
-    }
-
-    // Number check
+    // Has numbers  
     if (/\d/.test(password)) {
         score++;
-    } else {
-        feedback.push('Add numbers');
+    } else if (password.length > 0) {
+        feedback.push('Add some numbers');
     }
 
-    // Special character check
-    if (/[@$!%*?&]/.test(password)) {
-        score++;
-    } else {
-        feedback.push('Add special characters (@$!%*?&)');
-    }
-
-    // Bonus for length
-    if (password.length >= 12) {
-        score++;
-    }
-
-    const strengthLevels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
+    const strengthLevels = ['Weak', 'Fair', 'Good', 'Strong'];
 
     return {
-        score: Math.min(score, 5),
-        strength: strengthLevels[Math.min(score, 5)],
+        score: Math.min(score, 3),
+        strength: strengthLevels[Math.min(score, 3)] || 'Weak',
         feedback: feedback
     };
 };
