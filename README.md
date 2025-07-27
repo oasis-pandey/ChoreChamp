@@ -6,9 +6,9 @@ A full-stack web application for managing household chores and tasks within grou
 
 ### 🔐 Authentication & Security
 - **Secure Registration & Login**: JWT-based authentication with persistent sessions
-- **Strong Password Requirements**: 8+ characters with uppercase, lowercase, numbers, and special characters
-- **Interactive Password Strength Indicator**: Real-time feedback with visual strength meter and requirements checklist
-- **Password Validation**: Server-side and client-side validation for enhanced security
+- **Simple Password Requirements**: Any non-empty password accepted for ease of use
+- **Interactive Password Indicator**: Clean, simple password entry with visual feedback
+- **Secure Backend**: Server-side authentication and session management
 - **Protected Routes**: Automatic redirect for unauthorized access
 - **Session Management**: Secure token handling with automatic logout
 

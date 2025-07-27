@@ -37,25 +37,10 @@ const userSchema = new mongoose.Schema(
         // - Required: true (a user must have a password)
         // - Minlength: 8 (minimum length for password)
         // - Custom validation for strong password requirements
-        // Note: The actual password hashing will happen before saving to the database,
-        // not directly in the schema definition.
+        // Password field - simplified (no validation)
         password: {
             type: String,
-            required: [true, 'Please add a password'],
-            minlength: [8, 'Password must be at least 8 characters long'],
-            validate: {
-                validator: function (password) {
-                    // Strong password requirements:
-                    // - At least 8 characters
-                    // - At least one uppercase letter
-                    // - At least one lowercase letter
-                    // - At least one number
-                    // - At least one special character
-                    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-                    return strongPasswordRegex.test(password);
-                },
-                message: 'Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)'
-            }
+            required: [true, 'Please add a password']
         },
         // Group ID field:
         // - Type: Mongoose.Schema.Types.ObjectId (This is how Mongoose stores references to other documents)
