@@ -28,9 +28,9 @@ export const validatePassword = (password) => {
         errors.push('Password must contain at least one number');
     }
 
-    // Check for special character
-    if (!/[@$!%*?&]/.test(password)) {
-        errors.push('Password must contain at least one special character (@$!%*?&)');
+    // Check for special character (expanded list)
+    if (!/[@$!%*?&#\-_+={}[\]|\\:;"'<>,.\/~]/.test(password)) {
+        errors.push('Password must contain at least one special character');
     }
 
     return {
