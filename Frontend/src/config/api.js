@@ -4,7 +4,7 @@ const getApiBaseUrl = () => {
     // Check if we're in production
     if (process.env.NODE_ENV === 'production') {
         // Use environment variable for production API URL, fallback to a default
-        return process.env.REACT_APP_API_URL || 'https://your-backend-api.herokuapp.com/api';
+        return process.env.REACT_APP_API_URL || 'https://chorechamp-backend.onrender.com/api';
     }
 
     // Development environment
