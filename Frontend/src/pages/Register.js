@@ -28,10 +28,10 @@ const Register = () => {
         setLoading(true);
         setError('');
 
-        // Validate password strength
+        // Validate password
         const passwordValidation = validatePassword(formData.password);
         if (!passwordValidation.isValid) {
-            setError('Password does not meet security requirements');
+            setError(passwordValidation.errors.join(', '));
             setLoading(false);
             return;
         }

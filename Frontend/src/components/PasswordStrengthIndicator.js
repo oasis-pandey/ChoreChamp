@@ -45,7 +45,7 @@ export const getPasswordStrength = (password) => {
 const PasswordStrengthIndicator = ({ password }) => {
     if (!password) return null;
 
-    const { score, strength, color, feedback } = getPasswordStrength(password);
+    const { strength, color } = getPasswordStrength(password);
     const { isValid, errors } = validatePassword(password);
 
     return (
