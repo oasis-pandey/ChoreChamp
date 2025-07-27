@@ -22,7 +22,7 @@ const corsOptions = {
             /\.netlify\.app$/,
             /\.vercel\.app$/,
             /\.onrender\.com$/
-          ].filter(Boolean)
+        ].filter(Boolean)
         : ["http://localhost:3001", "http://localhost:3000"],
     credentials: true
 };

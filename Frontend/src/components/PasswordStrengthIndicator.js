@@ -112,10 +112,10 @@ const PasswordStrengthIndicator = ({ password }) => {
                 <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
                     <div
                         className={`h-2 rounded-full transition-all duration-300 ${score <= 1 ? 'bg-red-500' :
-                                score <= 2 ? 'bg-yellow-500' :
-                                    score <= 3 ? 'bg-blue-500' :
-                                        score <= 4 ? 'bg-green-500' :
-                                            'bg-green-600'
+                            score <= 2 ? 'bg-yellow-500' :
+                                score <= 3 ? 'bg-blue-500' :
+                                    score <= 4 ? 'bg-green-500' :
+                                        'bg-green-600'
                             }`}
                         style={{ width: `${(score / 5) * 100}%` }}
                     ></div>
