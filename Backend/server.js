@@ -15,7 +15,14 @@ const MONGO_URL = process.env.MONGO_URL;
 // CORS middleware to allow frontend communication
 const corsOptions = {
     origin: process.env.NODE_ENV === 'production'
-        ? process.env.CORS_ORIGIN || 'https://your-frontend-domain.com'
+        ? [
+            'https://chorechamp-frontend.onrender.com',
+            process.env.CORS_ORIGIN,
+            // Add common deployment platforms for flexibility
+            /\.netlify\.app$/,
+            /\.vercel\.app$/,
+            /\.onrender\.com$/
+          ].filter(Boolean)
         : ["http://localhost:3001", "http://localhost:3000"],
     credentials: true
 };
