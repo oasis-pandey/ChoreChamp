@@ -82,20 +82,50 @@ A full-stack web application for managing household chores and tasks within grou
 - **Context API**: Global state management for authentication
 - **Custom Components**: Reusable UI components and form validation
 
-### Development Tools
+### Development & Deployment
+- **Docker**: Containerization for consistent development and deployment
+- **Docker Compose**: Multi-container orchestration
 - **ESLint**: Code quality and consistency
-- **Nodemon**: Development server with hot reload
 - **Git**: Version control with organized commit history
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- **Node.js** (v16 or higher)
-- **MongoDB** (local installation or cloud instance like MongoDB Atlas)
-- **npm** or **yarn** package manager
-- **Git** for version control
+- **Docker** and **Docker Compose** (recommended)
+  - OR **Node.js** (v16 or higher), **MongoDB**, and **npm** for manual setup
 
-### Installation
+### Quick Start with Docker (Recommended)
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/oasis-pandey/ChoreChamp.git
+   cd ChoreChamp
+   ```
+
+2. **Start the application:**
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **Access the application:**
+   - **Frontend**: `http://localhost:3000`
+   - **Backend API**: `http://localhost:5001`
+   - **MongoDB**: `localhost:27017`
+
+4. **Stop the application:**
+   ```bash
+   docker-compose down
+   ```
+
+**Useful Docker Commands:**
+- View logs: `docker-compose logs -f`
+- View status: `docker-compose ps`
+- Rebuild containers: `docker-compose up -d --build`
+- Restart services: `docker-compose restart`
+
+### Manual Setup (Alternative)
+
+If you prefer to run without Docker:
 
 1. **Clone the repository:**
    ```bash
@@ -112,9 +142,10 @@ A full-stack web application for managing household chores and tasks within grou
 3. **Configure environment variables:**
    Create a `.env` file in the Backend directory:
    ```properties
-   PORT=5001
-   MONGO_URL=mongodb://localhost:27017/chorechamp
+   PORT=5000
+   MONGO_URL=mongodb://localhost:27017/ChoreChamp
    JWT_SECRET=your_super_secret_jwt_key_here_change_this_in_production
+   NODE_ENV=development
    ```
 
 4. **Set up the Frontend:**
@@ -123,41 +154,52 @@ A full-stack web application for managing household chores and tasks within grou
    npm install
    ```
 
-### Running the Application
+5. **Start MongoDB:**
+   ```bash
+   # Local MongoDB
+   mongod
+   
+   # Or use MongoDB Atlas connection string in .env
+   ```
 
-1. **Start MongoDB:**
-   - Local: `mongod` or start MongoDB service
-   - Cloud: Ensure MongoDB Atlas connection string is in `.env`
-
-2. **Start the Backend (Terminal 1):**
+6. **Start the Backend:**
    ```bash
    cd Backend
    npm start
    ```
 
-3. **Start the Frontend (Terminal 2):**
+7. **Start the Frontend:**
    ```bash
    cd Frontend
    npm start
    ```
 
-4. **Access the Application:**
-   - **Frontend**: `http://localhost:3001` (or next available port)
+8. **Access the application:**
+   - **Frontend**: `http://localhost:3000`
    - **Backend API**: `http://localhost:5001`
 
 ### Production Deployment
 
-#### Backend Deployment
+#### Docker Deployment (Recommended)
+1. Update environment variables in `docker-compose.yml` for production
+2. Use Docker secrets or environment files for sensitive data
+3. Deploy to container orchestration platform (AWS ECS, Azure Container Instances, Google Cloud Run)
+4. Set up reverse proxy (nginx) with SSL certificates
+5. Configure MongoDB with persistent volumes and backups
+
+#### Traditional Deployment
+
+**Backend:**
 1. Set production environment variables
 2. Use process manager like PM2
 3. Configure reverse proxy (nginx)
 4. Enable HTTPS with SSL certificates
 5. Set up MongoDB Atlas for cloud database
 
-#### Frontend Deployment
+**Frontend:**
 1. Build production bundle: `npm run build`
 2. Deploy to static hosting (Netlify, Vercel, AWS S3)
-3. Configure API proxy settings
+3. Configure API endpoints for production
 4. Set up custom domain and HTTPS
 
 ## 📱 User Guide
@@ -234,6 +276,7 @@ ChoreChamp/
 │   │   ├── generateCode.js   # Invite code generation
 │   │   └── passwordValidator.js # Password strength validation
 │   ├── server.js             # Main Express server configuration
+│   ├── Dockerfile            # Backend container configuration
 │   ├── package.json          # Backend dependencies
 │   └── .env                  # Environment variables (not in repo)
 ├── Frontend/                 # React application
@@ -257,8 +300,10 @@ ChoreChamp/
 │   │   │   └── GroupDetail.js # Detailed group management page
 │   │   └── App.js           # Main app with routing setup
 │   ├── public/              # Static assets
+│   ├── Dockerfile           # Frontend container configuration
 │   ├── package.json         # Frontend dependencies
 │   └── tailwind.config.js   # TailwindCSS configuration
+├── docker-compose.yml        # Multi-container orchestration
 ├── .gitignore               # Git ignore rules
 └── README.md                # This comprehensive documentation
 ```
