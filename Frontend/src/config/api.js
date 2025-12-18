@@ -1,14 +1,17 @@
 // API configuration for different environments
 
 const getApiBaseUrl = () => {
-    // For now, always use the deployed backend
-    return process.env.REACT_APP_API_URL || 'https://chorechamp-backend.onrender.com/api';
+    // Use environment variable if set
+    if (process.env.REACT_APP_API_URL) {
+        return process.env.REACT_APP_API_URL;
+    }
 
-    // Original logic commented out for testing
-    // if (process.env.NODE_ENV === 'production') {
-    //     return process.env.REACT_APP_API_URL || 'https://chorechamp-backend.onrender.com/api';
-    // }
-    // return '/api'; // This would use the proxy in package.json
+    if (process.env.NODE_ENV === 'production') {
+        return 'https://chorechamp-backend.onrender.com/api';
+    }
+
+    // For local development, use the host machine's port
+    return 'http://localhost:5001/api';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
